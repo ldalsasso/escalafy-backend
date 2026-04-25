@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: escalafy
+      POSTGRES_USER: escalafy
+      POSTGRES_PASSWORD: escalafy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U escalafy -d escalafy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://escalafy:escalafy@postgres:5432/escalafy
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./api:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  consumer:
+    build: ./consumer
+    environment:
+      DATABASE_URL: postgresql://escalafy:escalafy@postgres:5432/escalafy
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./consumer:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  recognition:
+    build: ./recognition
+    environment:
+      DATABASE_URL: postgresql://escalafy:escalafy@postgres:5432/escalafy
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ./recognition:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
