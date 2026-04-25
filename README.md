@@ -55,7 +55,7 @@ Event analytics pipeline for e-commerce. Ingests raw behavioral events, resolves
 ## How to Run Locally
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/ldalsasso/escalafy-backend.git
 cd escalafy-backend
 docker compose up --build
 ```
